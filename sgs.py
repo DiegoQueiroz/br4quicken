@@ -22,34 +22,39 @@ class SGS(object):
         Constructor
         '''
         self.sgsurl = 'https://www3.bcb.gov.br/sgspub/JSP/sgsgeral/FachadaWSSGS.wsdl'
-        self.soap = client.Client(self.sgsurl)
+        self.xmlencoding = 'ISO-8859-1'
+        self.dateformat = '%d/%m/%Y'
         
-        self.serie = serie
+        self.__serie = serie
+        
+        # An exception can be raised here if the service is
+        # unavailable for some reason
+        self.__soap = client.Client(self.sgsurl)
     
     def __soapGetValue(self,atDate):
-        strDate = atDate.strftime('%d/%m/%Y')
-        return self.soap.service.getValue(self.serie,strDate)
+        strDate = atDate.strftime(self.dateformat)
+        return self.__soap.service.getValue(self.__serie,strDate)
     
     def __soapGetValue2(self,initialDate,finalDate):
-        strIniDate = initialDate.strftime('%d/%m/%Y')
-        strFinDate = finalDate.strftime('%d/%m/%Y')
-        return self.soap.service.getValorEspecial(self.serie,strIniDate,strFinDate)
+        strIniDate = initialDate.strftime(self.dateformat)
+        strFinDate = finalDate.strftime(self.dateformat)
+        return self.__soap.service.getValorEspecial(self.__serie,strIniDate,strFinDate)
     
     def __soapGetLastValue(self,xml=False):
         if xml:
-            xmlret = self.soap.service.getUltimoValorXML(self.serie)
-            return xmlret.encode('ISO-8859-1')
+            xmlret = self.__soap.service.getUltimoValorXML(self.__serie)
+            return xmlret.encode(self.xmlencoding)
         else:
-            return self.soap.service.getUltimoValorVO(self.serie)
+            return self.__soap.service.getUltimoValorVO(self.__serie)
     
     def __soapGetValues(self,initialDate,finalDate,xml=False):
-        strIniDate = initialDate.strftime('%d/%m/%Y')
-        strFinDate = finalDate.strftime('%d/%m/%Y')
+        strIniDate = initialDate.strftime(self.dateformat)
+        strFinDate = finalDate.strftime(self.dateformat)
         if xml:
-            xmlret = self.soap.service.getValoresSeriesXML([self.serie],strIniDate,strFinDate)
-            return xmlret.encode('ISO-8859-1')
+            xmlret = self.__soap.service.getValoresSeriesXML([self.__serie],strIniDate,strFinDate)
+            return xmlret.encode(self.xmlencoding)
         else:
-            return self.soap.service.getValoresSeriesVO([self.serie],strIniDate,strFinDate)[0]
+            return self.__soap.service.getValoresSeriesVO([self.__serie],strIniDate,strFinDate)[0]
     
     def listAvailableMetadata(self):
         try:
