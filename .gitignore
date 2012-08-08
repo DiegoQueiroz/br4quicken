@@ -1,5 +1,6 @@
-# CSV files
+# Other files generated
 *.csv
+*.bat
 
 *.py[co]
 
