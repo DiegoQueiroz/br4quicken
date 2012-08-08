@@ -7,4 +7,4 @@ suitable format for importing into [Quicken](http://quicken.intuit.com/).
 ## Version history
 
  * No releases.
- 
+
