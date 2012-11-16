@@ -2,8 +2,10 @@
 
 from suds import client
 from datetime import date
+from quote import Quote
+from urllib2 import getproxies
 
-class SGS(object):
+class SGS(Quote):
     '''
     Class for access public data from Central Bank of Brazil through
     the "Sistema Gerenciador de Séries Temporais", acronym of SGS.
@@ -21,38 +23,47 @@ class SGS(object):
         '''
         Constructor
         '''
-        self.sgsurl = 'https://www3.bcb.gov.br/sgspub/JSP/sgsgeral/FachadaWSSGS.wsdl'
-        self.xmlencoding = 'ISO-8859-1'
-        self.dateformat = '%d/%m/%Y'
+        # SOAP constant settings
+        self.__sgsurl = 'https://www3.bcb.gov.br/sgspub/JSP/sgsgeral/FachadaWSSGS.wsdl'
+        self.__xmlencoding = 'ISO-8859-1'
+        self.__dateformat = '%d/%m/%Y'
         
         self.__serie = serie
-        
+        self.__soap = None
+        self.__uid = 'SGSID_{0}'.format(self.__serie)
+    
+    def __soapInit(self):
         # An exception can be raised here if the service is
         # unavailable for some reason
-        self.__soap = client.Client(self.sgsurl)
+        if not self.__soap:
+            self.__soap = client.Client(self.__sgsurl,proxy=getproxies())
     
     def __soapGetValue(self,atDate):
-        strDate = atDate.strftime(self.dateformat)
+        self.__soapInit()
+        strDate = atDate.strftime(self.__dateformat)
         return self.__soap.service.getValue(self.__serie,strDate)
     
     def __soapGetValue2(self,initialDate,finalDate):
-        strIniDate = initialDate.strftime(self.dateformat)
-        strFinDate = finalDate.strftime(self.dateformat)
+        self.__soapInit()
+        strIniDate = initialDate.strftime(self.__dateformat)
+        strFinDate = finalDate.strftime(self.__dateformat)
         return self.__soap.service.getValorEspecial(self.__serie,strIniDate,strFinDate)
     
     def __soapGetLastValue(self,xml=False):
+        self.__soapInit()
         if xml:
             xmlret = self.__soap.service.getUltimoValorXML(self.__serie)
-            return xmlret.encode(self.xmlencoding)
+            return xmlret.encode(self.__xmlencoding)
         else:
             return self.__soap.service.getUltimoValorVO(self.__serie)
     
     def __soapGetValues(self,initialDate,finalDate,xml=False):
-        strIniDate = initialDate.strftime(self.dateformat)
-        strFinDate = finalDate.strftime(self.dateformat)
+        self.__soapInit()
+        strIniDate = initialDate.strftime(self.__dateformat)
+        strFinDate = finalDate.strftime(self.__dateformat)
         if xml:
             xmlret = self.__soap.service.getValoresSeriesXML([self.__serie],strIniDate,strFinDate)
-            return xmlret.encode(self.xmlencoding)
+            return xmlret.encode(self.__xmlencoding)
         else:
             return self.__soap.service.getValoresSeriesVO([self.__serie],strIniDate,strFinDate)[0]
     
@@ -90,3 +101,6 @@ class SGS(object):
         except:
             return {}
 
+    def getUniqueID(self):
+        return self.__uid
+    
