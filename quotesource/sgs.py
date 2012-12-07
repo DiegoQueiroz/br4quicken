@@ -30,7 +30,7 @@ class SGS(Quote):
         
         self.__serie = serie
         self.__soap = None
-        self.__uid = 'SGSID_{0}'.format(self.__serie)
+        self.__uid = 'SGS_{0}'.format(self.__serie)
     
     def __soapInit(self):
         # An exception can be raised here if the service is
@@ -41,7 +41,7 @@ class SGS(Quote):
     def __soapGetValue(self,atDate):
         self.__soapInit()
         strDate = atDate.strftime(self.__dateformat)
-        return self.__soap.service.getValue(self.__serie,strDate)
+        return self.__soap.service.getValor(self.__serie,strDate)
     
     def __soapGetValue2(self,initialDate,finalDate):
         self.__soapInit()
@@ -96,7 +96,7 @@ class SGS(Quote):
     
     def getValues(self,initialDate,finalDate):
         try:
-            data = self.__soapGetValues(initialDate,finalDate)
+            data = self.__soapGetValues(initialDate,finalDate,xml=False)
             return { date(value.ano,value.mes,value.dia): value.valor for value in data.valores }
         except:
             return {}
