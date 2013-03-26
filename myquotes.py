@@ -13,23 +13,36 @@ if __name__ == '__main__':
     setlocale(LC_TIME,'')
     
     INDEXES = {
+        # Entry
+        # Index long name : ( datasource, accumulate_ammount, accumulate_function)
+        
+        # accumulate function valid values:
+        #  * sum
+        #  * interest
+        
         # Indexes
-        'SGSID_INDEX_BOVESPA'         : SGS(7)    , # IBovespa
-        'SGSID_INTEREST_SELIC'        : SGS(11)   , # Taxa de juros - SELIC
-        'SGSID_INTEREST_CDI'          : SGS(12)   , # Taxa de juros - CDI
-        'SGSID_INTEREST_REFERENCE'    : SGS(226)  , # Taxa Referencial de Juros (TR)
-        'SGSID_INTEREST_SELIC_COPOM'  : SGS(432)  , # Taxa de juros - Meta SELIC definida pela COPOM
-        'SGSID_INTEREST_SELIC_ANNUAL' : SGS(1178) , # Taxa de juros - SELIC anualizada com 252 dias úteis
-        'SGSID_INTEREST_CDI_ANNUAL'   : SGS(4389) , # Taxa de juros - CDI anualizada com 252 dias úteis
+        'SGSID_INDEX_BOVESPA'         : ( SGS(7)   , 1 , ''        ) , # IBovespa
+        'SGSID_INTEREST_SELIC'        : ( SGS(11)  , 1 , ''        ) , # Taxa de juros - SELIC
+        'SGSID_INTEREST_CDI'          : ( SGS(12)  , 1 , ''        ) , # Taxa de juros - CDI
+        'SGSID_INTEREST_REFERENCE'    : ( SGS(226) , 1 , ''        ) , # Taxa Referencial de Juros (TR)
+        'SGSID_INTEREST_SELIC_COPOM'  : ( SGS(432) , 1 , ''        ) , # Taxa de juros - Meta SELIC definida pela COPOM
+        'SGSID_INTEREST_SELIC_ANNUAL' : ( SGS(1178), 1 , ''        ) , # Taxa de juros - SELIC anualizada com 252 dias úteis
+        'SGSID_INTEREST_CDI_ANNUAL'   : ( SGS(4389), 1 , ''        ) , # Taxa de juros - CDI anualizada com 252 dias úteis
             
         # Profitability
-        'SGSID_PROFITABILITY_SAVINGS' : SGS(25)   , # Rentabilidade da poupança
-        
+        'SGSID_PROFITABILITY_SAVINGS' : ( SGS(25)  , 1 , ''        ) , # Rentabilidade da poupança
+       
         # Inflation indicators
-        'SGSID_INFLATION_INPC'        : SGS(188)  , # Inflação: INPC
-        'SGSID_INFLATION_IGP_M'       : SGS(189)  , # Inflação: IGP-M
-        'SGSID_INFLATION_IPC_FIPE'    : SGS(193)  , # Inflação: IPC-Fipe
-        'SGSID_INFLATION_IPCA'        : SGS(433)  , # Inflação: IPCA (oficial do Brasil)
+        'SGSID_INFLATION_INPC'        : ( SGS(188) , 1 , ''        ) , # Inflação: INPC
+        'SGSID_INFLATION_IGP_M'       : ( SGS(189) , 1 , ''        ) , # Inflação: IGP-M
+        'SGSID_INFLATION_IPC_FIPE'    : ( SGS(193) , 1 , ''        ) , # Inflação: IPC-Fipe
+        'SGSID_INFLATION_IPCA'        : ( SGS(433) , 1 , ''        ) , # Inflação: IPCA (oficial do Brasil)
+                
+        # Inflation indicators - accumulated
+        'SGSID_INFLATION_INPC-AC12'   : ( SGS(188) , 12, 'interest') , # Inflação: INPC - Acumulado 12 meses
+        'SGSID_INFLATION_IGP_M-AC12'  : ( SGS(189) , 12, 'interest') , # Inflação: IGP-M - Acumulado 12 meses
+        'SGSID_INFLATION_IPC_FIPE-AC12':( SGS(193) , 12, 'interest') , # Inflação: IPC-Fipe - Acumulado 12 meses
+        'SGSID_INFLATION_IPCA-AC12'   : ( SGS(433) , 12, 'interest') , # Inflação: IPCA (oficial do Brasil) - Acumulado 12 meses
     }
     
     filename = 'INDEXES_BR_QUICKEN.csv'
@@ -41,10 +54,13 @@ if __name__ == '__main__':
     for seriename in sorted(INDEXES,key=lambda x: INDEXES[x]):
         try:
             print('Connecting to webservice...')
-            datasource = INDEXES[seriename]
-            qcsv = QuickenCSV(datasource)
+            datasource, accumulate, accfunction = INDEXES[seriename]
+            qcsv = QuickenCSV(datasource,accumulate,accfunction)
+            
+            if accumulate > 1:
+                iniDate = endDate - timedelta(days=interval + 365)
         
-            print('Retrieving data of serie %s (%s)...' % (seriename[6:], INDEXES[seriename].getUniqueID()) )
+            print('Retrieving data of serie %s (%s)...' % (seriename[6:], datasource.getUniqueID()) )
             qcsv.updateValues(iniDate, endDate)
         except:
             print('Service unavailable! Try again later.')
