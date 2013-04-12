@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
+
 if __name__ == '__main__':
     from quickencsv import QuickenCSV
     from quotesource.sgs import SGS
@@ -28,9 +30,17 @@ if __name__ == '__main__':
         'SGSID_INTEREST_SELIC_COPOM'  : ( SGS(432) , 1 , ''        ) , # Taxa de juros - Meta SELIC definida pela COPOM
         'SGSID_INTEREST_SELIC_ANNUAL' : ( SGS(1178), 1 , ''        ) , # Taxa de juros - SELIC anualizada com 252 dias úteis
         'SGSID_INTEREST_CDI_ANNUAL'   : ( SGS(4389), 1 , ''        ) , # Taxa de juros - CDI anualizada com 252 dias úteis
+
+        # Indexes - accumulated
+        #'SGSID_INTEREST_REFERENCE'    : ( SGS(226) , 12, 'interest') , # Taxa Referencial de Juros (TR) - Acumulado 12 meses
+        # BROKEN! - this index is daily, the accumulated amount is wrong
             
         # Profitability
         'SGSID_PROFITABILITY_SAVINGS' : ( SGS(25)  , 1 , ''        ) , # Rentabilidade da poupança
+       
+        # Profitability - accumulated
+        #'SGSID_PROFITABILITY_SAVINGS' : ( SGS(25)  , 12, 'interest') , # Rentabilidade da poupança - Acumulado 12 meses
+        # BROKEN! - this index is daily, the accumulated amount is wrong
        
         # Inflation indicators
         'SGSID_INFLATION_INPC'        : ( SGS(188) , 1 , ''        ) , # Inflação: INPC
@@ -52,21 +62,20 @@ if __name__ == '__main__':
     iniDate = endDate - timedelta(days=interval)
     
     for seriename in sorted(INDEXES,key=lambda x: INDEXES[x]):
-        try:
-            print('Connecting to webservice...')
+        try:            
             datasource, accumulate, accfunction = INDEXES[seriename]
+            print('Downloading %-40s... ' % ( "%s (%s)" % (seriename[6:], datasource.getUniqueID()) ),end='')
+            
             qcsv = QuickenCSV(datasource,accumulate,accfunction)
             
             if accumulate > 1:
                 iniDate = endDate - timedelta(days=interval + 365)
         
-            print('Retrieving data of serie %s (%s)...' % (seriename[6:], datasource.getUniqueID()) )
             qcsv.updateValues(iniDate, endDate)
         except:
-            print('Service unavailable! Try again later.')
+            print('ERROR!')
             exit()
             
-        print('Exporting data...')
         lines = qcsv.exportToFile(filename,clearFile=False)
         
-        print('Done! %d lines exported.' % lines)
+        print('success! (%d lines)' % lines)
