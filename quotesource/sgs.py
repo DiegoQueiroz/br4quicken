@@ -23,7 +23,8 @@ class SGS(Quote):
 
     def __init__(self, serie):
         '''
-        Constructor
+        Constructor of the class.
+        @param serie: Serie number to access.
         '''
         super(SGS, self).__init__()
 
@@ -38,24 +39,48 @@ class SGS(Quote):
         self.__uid = 'SGS_{0}'.format(self.__serie)
 
     def __soap_init(self):
-        # An exception can be raised here if the service is
-        # unavailable for some reason
+        '''
+        Initializes the SOAP client if it is not already initialized.
+        @raise WebFault: if the service is unavailable for some reason.
+        '''
         if not self.__soap:
             self.__soap = client.Client(self.__sgs_url, proxy=getproxies())
 
     def __soap_get_value(self, at_date):
+        '''
+        Request a single value from a specified date from the web service
+        (using "getValor" function).
+        @return: a floating point with the value.
+        @raise WebFault: if the service is unavailable for some reason.
+        '''
         self.__soap_init()
         str_date = at_date.strftime(self.__date_format)
+
         return self.__soap.service.getValor(self.__serie, str_date)
 
     def __soap_get_value2(self, initial_date, final_date):
+        '''
+        Request the value of a interval of dates from the web service
+        (using "getValorEspecial" function).  This function should be
+        used for quotes whose each value depends of a initial and a final
+        date.  It should not be confused with "__soap_get_values".
+        @return: a floating point with the value.
+        @raise WebFault: if the service is unavailable for some reason.
+        '''
         self.__soap_init()
         str_ini_date = initial_date.strftime(self.__date_format)
         str_fin_date = final_date.strftime(self.__date_format)
+
         return self.__soap.service.getValorEspecial(self.__serie,
                                                     str_ini_date, str_fin_date)
 
     def __soap_get_last_value(self, xml=False):
+        '''
+        Request the last value from the web service (using "getUltimoValorVO"
+        function).  It also allow to present the output in XML (using
+        "getUltimoValorXML" function).
+        @raise WebFault: if the service is unavailable for some reason.
+        '''
         self.__soap_init()
         if xml:
             xml_ret = self.__soap.service.getUltimoValorXML(self.__serie)
@@ -64,6 +89,12 @@ class SGS(Quote):
             return self.__soap.service.getUltimoValorVO(self.__serie)
 
     def __soap_get_values(self, initial_date, final_date, xml=False):
+        '''
+        Request the values from a interval of dates (using "getValoresSeriesVO"
+        function).  It also allow to present the output in XML (using
+        "getValoresSeriesXML" function).
+        @raise WebFault: if the service is unavailable for some reason.
+        '''
         self.__soap_init()
         str_ini_date = initial_date.strftime(self.__date_format)
         str_fin_date = final_date.strftime(self.__date_format)
@@ -93,22 +124,41 @@ class SGS(Quote):
 
     def get_last_value(self):
         try:
-            value = self.__soap_get_last_value.ultimoValor
-            return date(value.ano, value.mes, value.dia), value.valor
+            last_value = self.__soap_get_last_value.ultimoValor
         except WebFault:
             return None
+
+        quote_date = date(last_value.ano, last_value.mes, last_value.dia)
+
+        try:
+            quote_value = float(last_value.valor)
+        except TypeError:
+            quote_value = None
+
+        return quote_date, quote_value
 
     def get_value(self, at_date):
         try:
-            return self.__soap_get_value(at_date)
+            return float(self.__soap_get_value(at_date))
         except WebFault:
             return None
+        except TypeError:
+            return None
+
+    def __make_entry(self, current_value):
+        quote_date = date(current_value.ano,
+                          current_value.mes, current_value.dia)
+        try:
+            quote_value = float(current_value.valor)
+        except TypeError:
+            quote_value = None
+        return quote_date, quote_value
 
     def get_values(self, initial_date, final_date):
+
         try:
             data = self.__soap_get_values(initial_date, final_date, xml=False)
-            return {date(value.ano, value.mes, value.dia): value.valor
-                        for value in data.valores}
+            return dict([self.__make_entry(value) for value in data.valores])
         except WebFault:
             return {}
 
