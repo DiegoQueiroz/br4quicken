@@ -13,69 +13,73 @@ if __name__ == '__main__':
     # This is necessary to correct date formating
     setlocale(LC_TIME, '')
 
+    # Entry
+    # Index long name : ( data_source, accumulate_ammount, accumulate_function)
+
+    # accumulate function valid values:
+    #  * sum
+    #  * interest
+
     INDEXES = {
-        # Entry
-        # Index long name : ( data_source, accumulate_ammount, accumulate_function)
-
-        # accumulate function valid values:
-        #  * sum
-        #  * interest
-
-        # Indexes
-        'SGSID_INDEX_BOVESPA'          : (SGS(7)   , 1 , '') , # IBovespa
-        'SGSID_INTEREST_SELIC'         : (SGS(11)  , 1 , '') , # Taxa de juros - SELIC
-        'SGSID_INTEREST_CDI'           : (SGS(12)  , 1 , '') , # Taxa de juros - CDI
-        'SGSID_INTEREST_REFERENCE'     : (SGS(226) , 1 , '') , # Taxa Referencial de Juros (TR)
-        'SGSID_INTEREST_SELIC_COPOM'   : (SGS(432) , 1 , '') , # Taxa de juros - Meta SELIC definida pela COPOM
-        'SGSID_INTEREST_SELIC_ANNUAL'  : (SGS(1178), 1 , '') , # Taxa de juros - SELIC anualizada com 252 dias úteis
-        'SGSID_INTEREST_CDI_ANNUAL'    : (SGS(4389), 1 , '') , # Taxa de juros - CDI anualizada com 252 dias úteis
-
-        # Indexes - accumulated
-        #'SGSID_INTEREST_REFERENCE'    : ( SGS(226) , 12, 'interest') ,  # Taxa Referencial de Juros (TR) - Acumulado 12 meses
-        # BROKEN! - this index is daily, the accumulated amount is wrong
-
-        # Profitability
-        'SGSID_PROFITABILITY_SAVINGS'  : (SGS(25)  , 1 , '') , # Rentabilidade da poupança
-
-        # Profitability - accumulated
-        #'SGSID_PROFITABILITY_SAVINGS' : ( SGS(25)  , 12, 'interest') ,  # Rentabilidade da poupança - Acumulado 12 meses
-        # BROKEN! - this index is daily, the accumulated amount is wrong
-
-        # Inflation indicators
-        'SGSID_INFLATION_INPC'         : (SGS(188) , 1 , '') , # Inflação: INPC
-        'SGSID_INFLATION_IGP_M'        : (SGS(189) , 1 , '') , # Inflação: IGP-M
-        'SGSID_INFLATION_IPC_FIPE'     : (SGS(193) , 1 , '') , # Inflação: IPC-Fipe
-        'SGSID_INFLATION_IPCA'         : (SGS(433) , 1 , '') , # Inflação: IPCA (oficial do Brasil)
-
-        # Inflation indicators - accumulated
-        'SGSID_INFLATION_INPC-AC12'    : (SGS(188) , 12, 'interest') , # Inflação: INPC - Acumulado 12 meses
-        'SGSID_INFLATION_IGP_M-AC12'   : (SGS(189) , 12, 'interest') , # Inflação: IGP-M - Acumulado 12 meses
-        'SGSID_INFLATION_IPC_FIPE-AC12': (SGS(193) , 12, 'interest') , # Inflação: IPC-Fipe - Acumulado 12 meses
-        'SGSID_INFLATION_IPCA-AC12'    : (SGS(433) , 12, 'interest') , # Inflação: IPCA (oficial do Brasil) - Acumulado 12 meses
+        'SIMPLE DAILY INDEXES': ([
+            # Indexes
+            7,  # IBovespa
+            11,  # Taxa de juros - SELIC
+            12,  # Taxa de juros - CDI
+            432,  # Taxa de juros - Meta SELIC definida pela COPOM
+            1178,  # Taxa de juros - SELIC anualizada com 252 dias úteis
+            4389,  # Taxa de juros - CDI anualizada com 252 dias úteis
+        ], 1, ''),
+        'SPECIAL DAILY INDEXES': ([
+            # Indexes
+            226,  # Taxa Referencial de Juros (TR)
+            # Profitability
+            25,  # Rentabilidade da poupança
+        ], 1, ''),
+        'SIMPLE MONTHLY INDEXES': ([
+            # Inflation indicators
+            188,  # Inflação: INPC
+            189,  # Inflação: IGP-M
+            193,  # Inflação: IPC-Fipe
+            433,  # Inflação: IPCA (oficial do Brasil)
+        ], 1, ''),
+        'IPCA ACCUMULATED': ([
+            # Inflation indicators - accumulated
+            433,  # Inflação: IPCA (oficial do Brasil) - Acumulado 12 meses
+        ], 12, 'interest'),
+        'IGP-M ACCUMULATED': ([
+            # Inflation indicators - accumulated
+            189,  # Inflação: IGP-M - Acumulado 12 meses
+        ], 12, 'interest'),
+        'IPC-Fipe ACCUMULATED': ([
+            # Inflation indicators - accumulated
+            193,  # Inflação: IPC-Fipe - Acumulado 12 meses
+        ], 12, 'interest'),
+        'INPC ACCUMULATED': ([
+            # Inflation indicators - accumulated
+            188,  # Inflação: INPC - Acumulado 12 meses
+        ], 12, 'interest'),
     }
 
-    filename = 'INDEXES_BR_QUICKEN.csv'
-    interval = 90  # days
+    FILENAME = 'INDEXES_BR_QUICKEN.csv'
+    INTERVAL = 90  # days
 
-    end_date = date.today()
-    ini_date = end_date - timedelta(days=interval)
+    END_DATE = date.today()
+    INI_DATE = END_DATE - timedelta(days=INTERVAL)
 
-    for seriename in sorted(INDEXES, key=lambda x: INDEXES[x]):
-        try:
-            datasource, accumulate, accfunction = INDEXES[seriename]
-            the_serie = "%s (%s)" % (seriename[6:], datasource.get_unique_ID())
-            print('Downloading %-40s... ' % (the_serie), end='')
+    for indexjob in INDEXES:
+        series, accumulate, accfunction = INDEXES[indexjob]
+        datasource = SGS(series)
 
-            qcsv = QuickenCSV(datasource, accumulate, accfunction)
+        print('Downloading %-40s... ' % (indexjob), end='')
 
-            if accumulate > 1:
-                iniDate = end_date - timedelta(days=interval + 365)
+        qcsv = QuickenCSV(datasource, accumulate, accfunction)
 
-            qcsv.update_values(ini_date, end_date)
-        except:
-            print('ERROR!')
-            exit()
+        if accumulate > 1:
+            INI_DATE = END_DATE - timedelta(days=INTERVAL + 365)
 
-        lines = qcsv.export_to_file(filename, clear_file=False)
+        qcsv.update_values(INI_DATE, END_DATE)
+
+        lines = qcsv.export_to_file(FILENAME, clear_file=False)
 
         print('success! (%d lines)' % lines)

@@ -52,10 +52,6 @@ class GF(Quote):
 
         raise NotImplementedError()
 
-    def getUniqueID(self):
-        # FIXME: must implement
-        raise NotImplementedError()
-
     def __buildURL(self, page, params):
         # 'show' must always be the first parameter
 

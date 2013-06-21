@@ -56,9 +56,9 @@ class QuickenCSV(object):
             csvfile = csvwriter(f, delimiter=self.field_delimiter,
                                 quotechar=self.quote_char)
 
-            data = [(self.data_source.get_unique_ID(),
-                     qdate.strftime(self.date_format), qvalue)
-                     for qdate, qvalue in sorted(self.values.items())]
+            data = [(qserie, qdate.strftime(self.date_format), qvalue)
+                     for (qserie, qdate), qvalue in
+                        sorted(self.values.items())]
 
             if self.accumulate_amount > 1:
                 # Data must be accumulated
