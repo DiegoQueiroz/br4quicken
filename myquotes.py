@@ -32,7 +32,8 @@ if __name__ == '__main__':
         ], 1, ''),
         'SPECIAL DAILY INDEXES': ([
             # Indexes
-            226,  # Taxa Referencial de Juros (TR)
+            226,  # Taxa Referencial de Juros - TR
+            253,  # Taxa Básica Financeira - TBF
             # Profitability
             25,  # Rentabilidade da poupança
         ], 1, ''),
@@ -62,7 +63,7 @@ if __name__ == '__main__':
     }
 
     FILENAME = 'INDEXES_BR_QUICKEN.csv'
-    INTERVAL = 90  # days
+    INTERVAL = 60  # days
 
     END_DATE = date.today()
     INI_DATE = END_DATE - timedelta(days=INTERVAL)
