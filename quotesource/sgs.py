@@ -230,21 +230,13 @@ class SGS(Quote):
         except TypeError:
             return None
 
-    def __build_ID(self, serie):
-        '''
-        Build an unique ID based on serie number.
-        @param serie: The serie number.
-        @return: A string with the unique ID.
-        '''
-        return 'SGS_{0}'.format(serie)
-
     def __build_result(self, data):
         '''
         Build the result dictionary.
         @param data: List of WSValorSerieVO.
         @return: Dict in the form "ticker, date: quotation"
         '''
-        quote_names = [self.__build_ID(entry.oidSerie)
+        quote_names = [self.build_ID(entry.oidSerie)
                    for entry in data]
         quote_dates = [date(entry.ano, entry.mes, entry.dia)
                        for entry in data]
