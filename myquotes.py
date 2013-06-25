@@ -77,9 +77,11 @@ if __name__ == '__main__':
         qcsv = QuickenCSV(datasource, accumulate, accfunction)
 
         if accumulate > 1:
-            INI_DATE = END_DATE - timedelta(days=INTERVAL + 365)
+            this_ini_date = END_DATE - timedelta(days=INTERVAL + 365)
+        else:
+            this_ini_date = INI_DATE
 
-        qcsv.update_values(INI_DATE, END_DATE)
+        qcsv.update_values(this_ini_date, END_DATE)
 
         lines = qcsv.export_to_file(FILENAME, clear_file=False)
 

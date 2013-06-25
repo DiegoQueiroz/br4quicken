@@ -3,11 +3,11 @@ class Quote(object):
     Abstract base class for quote downloading.
     '''
 
-    def __init__(self, prefix='UNKNOWN'):
+    def __init__(self):
         '''
         Constructor
         '''
-        self.__prefix = prefix
+        self.__prefix = self.__class__.__name__.upper()
 
     def get_last_value(self):
         '''
