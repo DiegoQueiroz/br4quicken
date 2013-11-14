@@ -23,6 +23,7 @@ if __name__ == '__main__':
     INDEXES = {
         'SIMPLE DAILY INDEXES': ([
             # Indexes
+            1,  # Taxa de câmbio, dólar americano
             7,  # IBovespa
             11,  # Taxa de juros - SELIC
             12,  # Taxa de juros - CDI
